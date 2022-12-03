@@ -1,0 +1,35 @@
+Neutral network
+yleiset ongelmat:
+	- pystyykö kone löytämään samansuuruisuutta? Fundamentaalinen ero kuvantunnistuseen on se, että pikselien arvot ovat magnitudeja.
+	2048 puolestaan pitää sisällään muutakin.
+		- Ratkaisut?:
+			- yhtäsuuruuksia inputtiin?
+				- laskennallisesti raskasta, mitä otetaan huomioon, tuleeko mallista liian sekava
+			- monimutkaisempia ehtolauseita neuroniin (esim. if(a_0==a_1 and a_3==0) 10 else 0 )
+				- Nämä varmaan korjaantuu automaattisesti ainakin osittain multilayerissa
+				- cost function optimoiminen entistäkin raskaampaa
+
+input:
+	grid (mahdollisesti log2, max value 16)
+output:
+	suunta (0-3)
+layers:
+	vaikea sanoa, yksi ei todennäköisesti riitä. Dimensioita paljon
+	- tarvitaan ainakin kaksi, jotta saadaan patterneja
+
+cost-function ideat:
+	
+	Läpi pelatun n pelin pisteet networkilla
+		- ongelmat: 
+			- gradienttia ei voi määrittää -> mallin parantaminen vaikeaa
+				- ratkaisu: vertaa tuloksia toisiinsa; valitse paras.
+			- todennäköisesti laskennallisesti raskas
+		- plussat:
+			-Tehty neural network hengessä, 
+	Gridista suunta, verrataan "parhaaseen" suuntaan
+		- ongelmat: paras suunta manuaalisesti, eikä silloin edes optimaalinen, ei kone-oppimista
+			- ratkaisu: pelaan itse niin hyvin kuin pystyn, treenataan kone pelaamaan kuin minä :D
+		- plussat: simppeli toteuttaa, ei komputationaalisesti raskas
+
+Plan 2022/12/02:
+
