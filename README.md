@@ -15,6 +15,7 @@ Contains some test of base game functions.
 blind_selectors
 ---------------
 Contains simplest decision making functions, which only input is the possible directions and points given by the very next move. These include
+
     - Preferred directions
     - Maximized points + preferred direction (as a tie breaker)
     - Random move
