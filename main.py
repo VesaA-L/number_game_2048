@@ -16,7 +16,7 @@ def main():
     pattern_hunt(5,10)
     blind_selectors.reset_step()
 
-    for i in range(1000):
+    for i in range(50):
 
         grid = play(blind_selectors.preferred_directions1)
         results1.append(resources.points)
@@ -83,7 +83,7 @@ def main():
 
     print(sum(results6))
     print(max(results6))
-    print(time.time-start_time)
+    print(time.time()-start_time)
 
 
 def playManually():
