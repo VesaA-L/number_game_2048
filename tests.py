@@ -1,4 +1,7 @@
+import copy
+
 import resources
+from grid_evaluator import evaluate_4x4_grid, tree_search
 
 def test_row_point_calculator():
   
@@ -61,5 +64,43 @@ def test_row_movement():
     print(bool(resources.check_movement(test_row_7)==expected_7))
     
 
+def test_grid_evaluator():
+    test_grid_1 = [
+        [0,0,1,0],
+        [0,16,32,0],
+        [0,64,1,16],
+        [8,0,1,0]
+    ]
+    test_grid_2 = [
+        [0,0,1,0],
+        [0,16,32,0],
+        [0,64,128,16],
+        [8,16,512,1024]
+    ]
+    test_grid_3 = [
+        [0,0,1,0],
+        [256,16,32,0],
+        [0,64,1,16],
+        [512,0,1,512]
+    ]
+    print("test1")
+    print(evaluate_4x4_grid(test_grid_1))
+    print("test2")
+    print(evaluate_4x4_grid(test_grid_2))
+    print("test3")
+    print(evaluate_4x4_grid(test_grid_3))
+
 test_row_point_calculator()
 test_row_movement()
+test_grid_evaluator()
+
+test_grid_2 = [
+        [0,0,1,0],
+        [0,16,32,0],
+        [0,64,128,16],
+        [8,16,512,1024]
+]
+resources.set_grid(copy.deepcopy(test_grid_2))
+tree_search()
+resources.print_grid()
+print(test_grid_2)

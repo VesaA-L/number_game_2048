@@ -1,13 +1,27 @@
 import random
-
+import numpy as np
+from copy import deepcopy
+# Playing the game and blind algorithms work just fine with any dimensions, but grid analysing
+# and neural networks work only with grid size 4
 dim = 4
-game_grid = [[0 for col in range(dim)] for row in range(dim)]
+game_grid = np.zeros((dim, dim), dtype=np.int16) # max value 32k, sufficient for 4x4, otherwise use int32
 points = 0
 
 def reset_game_grid():
     global game_grid
-    game_grid = [[0 for col in range(dim)] for row in range(dim)]
+    game_grid = np.zeros((dim, dim), dtype=np.int16)
 
+def set_grid(grid):
+    global game_grid
+    game_grid = [grid[a][:] for a in range(dim)]
+
+def get_grid():
+    global game_grid
+    return [game_grid[a][:] for a in range(dim)]
+
+def insert(value, row, column):
+    global game_grid
+    game_grid[row][column] = value
 
 def set_dim(int):
     global dim
@@ -17,15 +31,13 @@ def reset_points():
     global points
     points = 0
 
-def take_turn(dir):
-    global game_grid
-    changed = next_grid(dir)
+def take_turn(grid, dir):
+    changed = next_grid(grid, dir)
     if changed:
-        add_random()
-    return
+        add_random(grid)
+    return grid
 
-def next_grid(dir):
-    global game_grid
+def next_grid(grid, dir):
     global points
     changed = False
     match dir:
@@ -34,24 +46,24 @@ def next_grid(dir):
                 # Combine
                 for row in range(dim-1):
                     a = 1
-                    while row + a < dim and game_grid[row+a][column] == 0:
+                    while row + a < dim and grid[row+a][column] == 0:
                         a+=1
-                    if row + a < dim and game_grid[row][column]==game_grid[row+a][column]:
-                        game_grid[row][column]=2*game_grid[row][column]
-                        game_grid[row+a][column]=0
-                        points += game_grid[row][column]
+                    if row + a < dim and grid[row][column]==grid[row+a][column]:
+                        grid[row][column]=2*grid[row][column]
+                        grid[row+a][column]=0
+                        points += grid[row][column]
                         changed = True
                 # Move
                 for row in range(dim-1):
-                    if game_grid[row][column]==0:
+                    if grid[row][column]==0:
                         for position in range(row+1,dim):
-                            if game_grid[position][column] != 0:
-                                game_grid[row][column]=game_grid[position][column]
-                                game_grid[position][column] = 0
+                            if grid[position][column] != 0:
+                                grid[row][column]=grid[position][column]
+                                grid[position][column] = 0
                                 changed = True
                                 break
         case 1: #right
-            for row in game_grid:
+            for row in grid:
                 for column in range(dim-1):
                     a = 1
                     while column + a < dim and row[dim-1-(column+a)] == 0:
@@ -74,24 +86,24 @@ def next_grid(dir):
                 # Combine
                 for row in range(dim-1):
                     a = 1
-                    while row + a < dim and game_grid[dim-1-(row+a)][column] == 0:
+                    while row + a < dim and grid[dim-1-(row+a)][column] == 0:
                         a+=1
-                    if row + a < dim and game_grid[dim-1-row][column]==game_grid[dim-1-(row+a)][column]:
-                        game_grid[dim-1-row][column]=2*game_grid[dim-1-row][column]
-                        points += game_grid[dim-1-row][column]
-                        game_grid[dim-1-(row+a)][column]=0
+                    if row + a < dim and grid[dim-1-row][column]==grid[dim-1-(row+a)][column]:
+                        grid[dim-1-row][column]=2*grid[dim-1-row][column]
+                        points += grid[dim-1-row][column]
+                        grid[dim-1-(row+a)][column]=0
                         changed = True
                 # Move
                 for row in range(dim-1):
-                    if game_grid[dim-1-row][column]==0:
+                    if grid[dim-1-row][column]==0:
                         for position in range(row+1,dim):
-                            if game_grid[dim-1-position][column] != 0:
-                                game_grid[dim-1-row][column]=game_grid[dim-1-position][column]
-                                game_grid[dim-1-position][column] = 0
+                            if grid[dim-1-position][column] != 0:
+                                grid[dim-1-row][column]=grid[dim-1-position][column]
+                                grid[dim-1-position][column] = 0
                                 changed = True
                                 break
         case 3: #left 
-            for row in game_grid:
+            for row in grid:
                 for column in range(dim-1):
                     a = 1
                     while column + a < dim and row[column+a] == 0:
@@ -114,84 +126,76 @@ def next_grid(dir):
             return False
     return changed
 
-def add_random():
-    global game_grid
+def add_random(grid):
     empty_positions: list[tuple[int, int]] = []
     for i in range(dim):
         for j in range(dim):
-            if game_grid[i][j] == 0:
+            if grid[i][j] == 0:
                 empty_positions.append((i,j))
     if not bool(empty_positions):
         print("something went wrong and there was no empty spaces")
         return
     positions = empty_positions[random.randrange(len(empty_positions))]
     if random.random()< 0.8:
-        game_grid[positions[0]][positions[1]] = 2
+        grid[positions[0]][positions[1]] = 2
     else:
-        game_grid[positions[0]][positions[1]] = 4
+        grid[positions[0]][positions[1]] = 4
 
-def print_grid():
+def print_grid(grid):
     for i in range(dim):
         for j in range(dim):
-            print(game_grid[i][j], end=" ")
+            print(grid[i][j], end=" ")
         print()
 
 # Directions are as follows: 0 up, 1 right, 2 down, 3 left
 
-def possible_directions():
-    global game_grid
+def possible_directions(grid):
     up, right, down, left= 0, 0, 0, 0
     # Up
     for column in range(dim):
-        up_row = []
+        up_row = np.empty(dim, dtype= np.int16)
         for row in range(dim):
-            up_row.append(game_grid[row][column])
+            up_row[row] = grid[row][column]
         up += rowPointCalculation(up_row)
     if(up == 0):
         up = -1
         for column in range(dim):
-            up_row = []
+            up_row = np.empty(dim, dtype= np.int16)
             for row in range(dim):
-                up_row.append(game_grid[row][column])
+                up_row[row] = grid[row][column]
             if(check_movement(up_row)):
                 up = 0
                 break
     # Right
-    for row in game_grid:
-        row.reverse()
-        right += rowPointCalculation(row)
-        # We need to reverse row's back
-        row.reverse()
+    for row in grid:
+        right += rowPointCalculation(np.flip(row))
     if(right == 0):
         right = -1
-        for row in game_grid:
-            row.reverse()
-            if(check_movement(row)):
+        for row in grid:
+            if(check_movement(np.flip(row))):
                 right = 0
-                row.reverse()
                 break
-            row.reverse()
     # Down
     for column in range(dim):
-        down_row = []
+        down_row = np.empty(dim, dtype= np.int16)
         for row in range(dim):
-            down_row.append(game_grid[dim-1-row][column])
+            down_row[row] = grid[dim-1-row][column]
         down += rowPointCalculation(down_row)
     if(down == 0):
         down = -1
         for column in range(dim):
-            down_row = []
+            down_row = np.empty(dim, dtype= np.int16)
             for row in range(dim):
-                down_row.append(game_grid[dim-1-row][column])
+                down_row[row] = grid[dim-1-row][column]
             if(check_movement(down_row)):
                 down = 0
                 break
     # Left
-    for row in game_grid:
+    for row in grid:
         left += rowPointCalculation(row)
     if(left == 0):
         left = -1
-        for row in game_grid:
+        for row in grid:
             if(check_movement(row)):
                 left = 0
                 break
@@ -202,7 +206,7 @@ def possible_directions():
 # Param: row is expeced to be a List with dim members
 def rowPointCalculation(row):
     # Global dim not used for testing purposes
-    dim = len(row)
+    dim = row.size
     points = 0
     a = 0
     while(a<dim-1):
@@ -219,10 +223,10 @@ def rowPointCalculation(row):
 
 def check_movement(row):
     a = 0
-    while(a < len(row)):
+    while(a < row.size):
         if row[a] == 0:
             i = 1
-            while(a+i < len(row)):
+            while(a+i < row.size):
                 if(row[a+i] != 0):
                     return True
                 i += 1
@@ -231,3 +235,10 @@ def check_movement(row):
     return False
 
 
+def find_empty_positions(grid):
+    empty_positions: list[tuple[int, int]] = []
+    for i in range(4):
+        for j in range(4):
+            if grid[i][j] == 0:
+                empty_positions.append((i,j))
+    return empty_positions
