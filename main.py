@@ -2,8 +2,10 @@ import resources
 import numpy as np
 import blind_selectors
 import grid_evaluator
+import time
 
 def main():
+    start_time = time.time()
     results1 = []
     results2 = []
     results3 = []
@@ -81,6 +83,7 @@ def main():
 
     print(sum(results6))
     print(max(results6))
+    print(time.time-start_time)
 
 
 def playManually():
